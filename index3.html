@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate JSON</title>
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
+</head>
+
+<body>
+    <label for="nameInput">Name:</label>
+    <input type="text" id="nameInput" placeholder="Enter name">
+
+    <label for="descriptionInput">Description:</label>
+    <input type="text" id="descriptionInput" placeholder="Enter description">
+    <label for="IPFS">IPFS:</label>
+    <input type="text" id="IPFS" placeholder="IPFS">
+
+
+    <button onclick="connectWallet()">Connect Wallet</button>
+    <button onclick="generateNFT()">Generate NFT</button>
+
+    <script>
+        var walletConnect = false;
+        var contractAddress = '0xED96b18476841A8558d2374818dA6BfE361e6EeB';
+
+        function connectWallet() {
+            // Connect to Metamask
+            try {
+                window.ethereum.request({ method: 'eth_requestAccounts' });
+                alert('Wallet Connected!');
+                walletConnect = true;
+            } catch (error) {
+                alert('Error connecting to wallet. Please make sure Metamask is installed and unlocked.');
+            }
+        }
+
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function getUri() {
+            var uri = document.getElementById('IPFS').value;
+            if (!uri) {
+                alert('IPFS VALUE NULL PLEASE ENTER IPFS VALUE!');
+            }
+            return uri;
+        }
+
+
+        function generateNFT() {
+
+            if (!walletConnect) {
+                alert('Please connect your wallet first!');
+                return;
+            }
+
+
+            var to = window.ethereum.selectedAddress;
+            var tokenId = getRandomInt(1000, 9999);
+            var uri = getUri();
+            web3 = new Web3();
+
+            const data = web3.eth.abi.encodeFunctionCall({
+                name: 'safeMint',
+                type: 'function',
+                inputs: [{
+                    type: 'address',
+                    name: 'to'
+                },
+                // {
+                //     type: 'uint256',
+                //     name: 'tokenId'
+                // },
+                {
+                    type: 'string',
+                    name: 'uri'
+                }
+                ]
+            }, [to, uri]);
+
+            // Call the Sepolia smart contract
+            window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [
+                    {
+                        to: contractAddress,
+                        from: window.ethereum.selectedAddress,
+                        data: data, // Function signature for the safeMint method
+                    }
+                ],
+            }).then(function (accounts) {
+                alert('wait NFT generated');
+            }).catch(function (error) {
+                alert('Error generating NFT. Please try again.');
+            });
+
+        }
+    </script>
+</body>
+
+</html>
